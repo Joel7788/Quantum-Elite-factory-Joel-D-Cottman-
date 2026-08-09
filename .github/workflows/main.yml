@@ -48,14 +48,33 @@ jobs:
           python -m pip install --upgrade pip
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
-      - name: Validate Quantum Huntor Terraform Config
+      - name: Set up Terraform
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: '1.9.8'
 
       - name: Check Terraform Formatting
-        run: terraform fmt -check Quantum_Huntor.tf
+        run: terraform fmt -check -recursive
+
+      - name: Validate Quantum Huntor Terraform Config
+        # Remote state lives in a GCS bucket supplied at deploy time, so CI
+        # validates the configuration without initializing the backend.
+        run: |
+          terraform init -backend=false -input=false
+          terraform validate
 
       - name: Run Quantum Wholesaling Pipeline
         run: python "quantum elite wholesaleing pipeline.py"
+
+      - name: Verify Pipeline Artifacts
+        run: |
+          test -f artifacts/telemetry.html
+          ls artifacts/documents/*/*.txt >/dev/null
+
+      - name: Upload Telemetry Dashboard
+        uses: actions/upload-artifact@v4
+        with:
+          name: quantum-elite-telemetry
+          path: artifacts/
+          retention-days: 14
 

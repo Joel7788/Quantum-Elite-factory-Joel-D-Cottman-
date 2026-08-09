@@ -1,0 +1,33 @@
+ASSIGNMENT OF REAL ESTATE PURCHASE AND SALE AGREEMENT
+QUANTUM ELITE WHOLESALING | OPERATOR: ${operator_name}
+
+DRAFT FOR OPERATOR AND ATTORNEY REVIEW -- NOT EXECUTED, NOT LEGAL ADVICE.
+
+Agreement Date: ${agreement_date}
+Property: ${property_address}
+
+PARTIES
+  Assignor: ${buyer_legal_name} (${buyer_role})
+  Assignee: ${assignee_name} (Buyer ID: ${assignee_id})
+  Original Seller: ${seller_name}
+    Phone: ${seller_phone}
+    Email: ${seller_email}
+
+TERMS
+  1. Assignor assigns all rights, title, and interest in the Purchase and Sale
+     Agreement for the Property to Assignee.
+  2. Original Purchase Price: ${purchase_price}
+  3. Assignment Fee: ${assignment_fee}, due to Assignor at closing.
+  4. Total Due From Assignee at Closing: ${total_to_assignee}
+  5. Closing Date: on or before ${closing_date}.
+  6. Assignee accepts the Property in its present condition and assumes all
+     obligations of the Buyer under the original Agreement from this date.
+  7. The Assignment Fee is non-refundable once Assignee's inspection period
+     under the original Agreement has expired.
+
+SIGNATURES (to be executed manually after attorney review)
+  Assignor: ______________________________  Date: ____________
+            ${buyer_legal_name}
+
+  Assignee: ______________________________  Date: ____________
+            ${assignee_name}

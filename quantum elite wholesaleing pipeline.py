@@ -1,19 +1,21 @@
 # Quantum Elite Wholesaling - Base44 Autonomous Lead Gen
 # Operator: JOEL D COTTMAN
-# Status: DATA DECRYPTION COMPLETE
+# Legacy entrypoint: kept for the scheduled workflow; delegates to quantum_elite.
 
-import os
+import sys
+from typing import Sequence
 
-def quantum_pipeline_init():
+from quantum_elite.cli import main
+
+
+def quantum_pipeline_init(argv: Sequence[str] = ("run",)):
     auth_status = "CONTACT PORT SUCCESSFUL | Operator: Joel D Cottman"
     print(f"{auth_status}")
     print("Initiating Free-Tier Autonomous Predictive Analysis...")
-    
-    # Logic for pulling motivated seller leads (Zillow/Public Records API)
-    # Logic for Automated Document Generation (Contracts)
-    # Neon Design Colors Integration: Post-Dating Protocol Active
-    
-    return "SYSTEM FULLY AUTONOMOUS"
+    exit_code = main(list(argv))
+    print("SYSTEM FULLY AUTONOMOUS" if exit_code == 0 else "SYSTEM DEGRADED")
+    return exit_code
+
 
 if __name__ == "__main__":
-    quantum_pipeline_init()
+    sys.exit(quantum_pipeline_init(sys.argv[1:] or ["run"]))

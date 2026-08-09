@@ -1,0 +1,125 @@
+[
+  {
+    "address": {
+      "street": "1420 Fillmore St",
+      "city": "Baltimore",
+      "state": "MD",
+      "postal_code": "21230"
+    },
+    "square_feet": 1600,
+    "bedrooms": 3,
+    "bathrooms": 1.5,
+    "year_built": 1955,
+    "lot_size_sqft": 2400,
+    "condition": "moderate",
+    "assessed_value": 244000,
+    "mortgage_balance": 61500,
+    "comparables": [
+      {
+        "address": {
+          "street": "1408 Fillmore St",
+          "city": "Baltimore",
+          "state": "MD",
+          "postal_code": "21230"
+        },
+        "sold_price": 294500,
+        "square_feet": 1550,
+        "sold_on": "2026-06-18",
+        "distance_miles": 0.1
+      },
+      {
+        "address": {
+          "street": "1512 Kearney Way",
+          "city": "Baltimore",
+          "state": "MD",
+          "postal_code": "21230"
+        },
+        "sold_price": 304000,
+        "square_feet": 1600,
+        "sold_on": "2026-05-02",
+        "distance_miles": 0.4
+      },
+      {
+        "address": {
+          "street": "1690 Sable Ct",
+          "city": "Baltimore",
+          "state": "MD",
+          "postal_code": "21230"
+        },
+        "sold_price": 320000,
+        "square_feet": 1700,
+        "sold_on": "2026-07-09",
+        "distance_miles": 0.8
+      },
+      {
+        "address": {
+          "street": "40 Faraway Pike",
+          "city": "Baltimore",
+          "state": "MD",
+          "postal_code": "21230"
+        },
+        "sold_price": 500000,
+        "square_feet": 1600,
+        "sold_on": "2026-07-01",
+        "distance_miles": 6.2
+      }
+    ]
+  },
+  {
+    "address": {
+      "street": "77 Chesapeake Row",
+      "city": "Baltimore",
+      "state": "MD",
+      "postal_code": "21224"
+    },
+    "square_feet": 2100,
+    "bedrooms": 4,
+    "bathrooms": 2.5,
+    "year_built": 2016,
+    "lot_size_sqft": 3600,
+    "condition": "turnkey",
+    "assessed_value": 402000,
+    "comparables": []
+  },
+  {
+    "address": {
+      "street": "88 Orchard Ave",
+      "city": "Wilmington",
+      "state": "DE",
+      "postal_code": "19805"
+    },
+    "square_feet": 1200,
+    "bedrooms": 3,
+    "bathrooms": 1.0,
+    "year_built": 1998,
+    "lot_size_sqft": 5000,
+    "condition": "heavy",
+    "assessed_value": 210000,
+    "comparables": [
+      {
+        "address": {
+          "street": "92 Orchard Ave",
+          "city": "Wilmington",
+          "state": "DE",
+          "postal_code": "19805"
+        },
+        "sold_price": 300000,
+        "square_feet": 1200,
+        "sold_on": "2026-06-30",
+        "distance_miles": 0.1
+      },
+      {
+        "address": {
+          "street": "14 Brandywine Ct",
+          "city": "Wilmington",
+          "state": "DE",
+          "postal_code": "19805"
+        },
+        "sold_price": 312500,
+        "square_feet": 1250,
+        "sold_on": "2026-05-21",
+        "distance_miles": 0.6
+      }
+    ]
+  }
+]
