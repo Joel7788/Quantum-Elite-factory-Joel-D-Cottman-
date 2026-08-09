@@ -154,3 +154,20 @@ def test_server_rejects_unknown_paths(http_server):
     with pytest.raises(urllib.error.HTTPError) as excinfo:
         urllib.request.urlopen(f"{http_server}/unknown")
     assert excinfo.value.code == 400
+
+
+@pytest.mark.parametrize("as_of", ["not-a-date", "2026-13-01", 20260809])
+def test_invalid_as_of_is_a_client_error(runtime, as_of):
+    with pytest.raises(service.ServiceError, match="as_of"):
+        runtime.handle("POST", "/run", {"as_of": as_of})
+
+
+def test_server_rejects_oversized_bodies(http_server):
+    oversized = json.dumps({"as_of": "x" * (service.MAX_BODY_BYTES + 1)}).encode()
+    request = urllib.request.Request(
+        f"{http_server}/run", data=oversized, method="POST",
+        headers={"Content-Type": "application/json"},
+    )
+    with pytest.raises(urllib.error.HTTPError) as excinfo:
+        urllib.request.urlopen(request)
+    assert excinfo.value.code == 413
