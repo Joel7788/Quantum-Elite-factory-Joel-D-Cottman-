@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import json
 import os
+import traceback
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal, InvalidOperation
@@ -54,10 +55,14 @@ def _decimal_env(name: str, fallback: Decimal) -> Decimal:
 def config_from_environment(payload: Mapping[str, Any]) -> PipelineConfig:
     defaults = PipelineConfig()
     as_of = payload.get("as_of")
+    try:
+        effective = date.fromisoformat(as_of) if as_of else defaults.as_of
+    except (TypeError, ValueError) as exc:
+        raise ServiceError(f"as_of must be an ISO date (YYYY-MM-DD), got {as_of!r}") from exc
     return PipelineConfig(
         min_motivation_score=_decimal_env("QE_MIN_MOTIVATION_SCORE", defaults.min_motivation_score),
         assignment_fee=_decimal_env("QE_ASSIGNMENT_FEE", defaults.assignment_fee),
-        as_of=date.fromisoformat(as_of) if as_of else defaults.as_of,
+        as_of=effective,
     )
 
 
@@ -105,14 +110,25 @@ class Runtime:
             raise ServiceError(f"unknown run_id: {run_id}")
 
         target = self.out_dir / str(run_id)
-        written = [write_dashboard(result, target / "telemetry.html")]
-        for packet in result.packets:
-            if packet.documents:
-                written.extend(
-                    docs.write_documents(
-                        packet.documents, target / "documents", packet.lead.lead_id
+        try:
+            written = [write_dashboard(result, target / "telemetry.html")]
+            for packet in result.packets:
+                if packet.documents:
+                    written.extend(
+                        docs.write_documents(
+                            packet.documents, target / "documents", packet.lead.lead_id
+                        )
                     )
-                )
+        except OSError as exc:
+            return Response(
+                500,
+                {
+                    "status": "failed",
+                    "halt": True,
+                    "run_id": str(run_id),
+                    "error": f"could not write artifacts under {target}: {exc}",
+                },
+            )
         return Response(
             200,
             {
@@ -144,23 +160,46 @@ def _make_handler(runtime: Runtime) -> type[BaseHTTPRequestHandler]:
         server_version = "QuantumElite/1.0"
 
         def _dispatch(self, method: str) -> None:
-            length = int(self.headers.get("Content-Length") or 0)
-            raw = self.rfile.read(length) if length else b""
             try:
-                payload = json.loads(raw) if raw else {}
-                if not isinstance(payload, dict):
-                    raise ServiceError("request body must be a JSON object")
+                payload = self._read_payload()
                 response = runtime.handle(method, self.path.split("?", 1)[0], payload)
             except json.JSONDecodeError as exc:
                 response = Response(400, {"status": "failed", "error": f"invalid JSON: {exc}"})
             except ServiceError as exc:
                 response = Response(400, {"status": "failed", "error": str(exc)})
+            except Exception as exc:
+                # Without this the exception would escape through the server and the
+                # caller (Cloud Workflows) would see a dropped connection with no
+                # status to act on.
+                traceback.print_exc()
+                response = Response(
+                    500,
+                    {
+                        "status": "failed",
+                        "halt": True,
+                        "error": f"internal error: {type(exc).__name__}: {exc}",
+                    },
+                )
             body = json.dumps(response.body).encode()
             self.send_response(response.status)
             self.send_header("Content-Type", "application/json")
             self.send_header("Content-Length", str(len(body)))
             self.end_headers()
             self.wfile.write(body)
+
+        def _read_payload(self) -> dict[str, Any]:
+            raw_length = self.headers.get("Content-Length")
+            try:
+                length = int(raw_length or 0)
+            except ValueError as exc:
+                raise ServiceError(
+                    f"Content-Length must be an integer, got {raw_length!r}"
+                ) from exc
+            raw = self.rfile.read(length) if length else b""
+            payload = json.loads(raw) if raw else {}
+            if not isinstance(payload, dict):
+                raise ServiceError("request body must be a JSON object")
+            return payload
 
         def do_GET(self) -> None:  # noqa: N802 - stdlib naming
             self._dispatch("GET")
@@ -174,8 +213,16 @@ def _make_handler(runtime: Runtime) -> type[BaseHTTPRequestHandler]:
     return Handler
 
 
+def _port_from_environment() -> int:
+    raw = os.environ.get("PORT", "8080")
+    try:
+        return int(raw)
+    except ValueError as exc:
+        raise ServiceError(f"PORT must be an integer, got {raw!r}") from exc
+
+
 def serve(port: int | None = None) -> None:  # pragma: no cover - process entrypoint
-    port = port or int(os.environ.get("PORT", "8080"))
+    port = port or _port_from_environment()
     runtime = Runtime()
     server = ThreadingHTTPServer(("0.0.0.0", port), _make_handler(runtime))
     print(f"quantum elite runtime listening on :{port}")
