@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import json
 from datetime import date
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Iterable, Iterator, Optional, Protocol, runtime_checkable
 
@@ -59,6 +59,17 @@ class ProviderError(RuntimeError):
     """Raised when a provider payload cannot be interpreted."""
 
 
+# Malformed payloads surface as any of these; the pipeline and the HTTP runtime
+# only handle ProviderError, so every one of them is translated below.
+_PARSE_ERRORS = (KeyError, TypeError, ValueError, InvalidOperation)
+
+
+def _reason(exc: Exception) -> str:
+    if isinstance(exc, KeyError):
+        return f"missing field: {exc.args[0]}"
+    return f"invalid field ({type(exc).__name__}: {exc})"
+
+
 def _money(value) -> Decimal:
     return Decimal(str(value))
 
@@ -71,8 +82,8 @@ def _address(payload: dict) -> Address:
             state=payload["state"],
             postal_code=str(payload["postal_code"]),
         )
-    except KeyError as exc:
-        raise ProviderError(f"address payload missing field: {exc.args[0]}") from exc
+    except _PARSE_ERRORS as exc:
+        raise ProviderError(f"address payload {_reason(exc)}") from exc
 
 
 def _enum_by_value(enum_cls, raw: str):
@@ -88,10 +99,17 @@ def load_json(path: Path) -> list[dict]:
         payload = json.loads(Path(path).read_text())
     except FileNotFoundError as exc:
         raise ProviderError(f"provider data file not found: {path}") from exc
+    except OSError as exc:
+        raise ProviderError(f"provider data file is unreadable: {path} ({exc})") from exc
     except json.JSONDecodeError as exc:
         raise ProviderError(f"provider data file is not valid JSON: {path}") from exc
     if not isinstance(payload, list):
         raise ProviderError(f"expected a JSON list in {path}, got {type(payload).__name__}")
+    for index, record in enumerate(payload):
+        if not isinstance(record, dict):
+            raise ProviderError(
+                f"expected a JSON object at {path}[{index}], got {type(record).__name__}"
+            )
     return payload
 
 
@@ -110,8 +128,8 @@ def parse_lead(payload: dict) -> Lead:
             asking_price=_money(asking) if asking is not None else None,
             days_on_market=payload.get("days_on_market"),
         )
-    except KeyError as exc:
-        raise ProviderError(f"lead payload missing field: {exc.args[0]}") from exc
+    except _PARSE_ERRORS as exc:
+        raise ProviderError(f"lead payload {_reason(exc)}") from exc
 
 
 def parse_property_data(payload: dict) -> PropertyData:
@@ -138,8 +156,8 @@ def parse_property_data(payload: dict) -> PropertyData:
             mortgage_balance=_money(payload.get("mortgage_balance", 0)),
             comparables=comparables,
         )
-    except KeyError as exc:
-        raise ProviderError(f"property payload missing field: {exc.args[0]}") from exc
+    except _PARSE_ERRORS as exc:
+        raise ProviderError(f"property payload {_reason(exc)}") from exc
 
 
 def parse_buyer(payload: dict) -> Buyer:
@@ -155,8 +173,8 @@ def parse_buyer(payload: dict) -> Buyer:
             close_days=int(payload["close_days"]),
             deals_closed=int(payload.get("deals_closed", 0)),
         )
-    except KeyError as exc:
-        raise ProviderError(f"buyer payload missing field: {exc.args[0]}") from exc
+    except _PARSE_ERRORS as exc:
+        raise ProviderError(f"buyer payload {_reason(exc)}") from exc
 
 
 def parse_contact(payload: dict) -> Contact:
@@ -167,8 +185,8 @@ def parse_contact(payload: dict) -> Contact:
             email=payload.get("email"),
             confidence=_money(payload.get("confidence", "0.5")),
         )
-    except KeyError as exc:
-        raise ProviderError(f"contact payload missing field: {exc.args[0]}") from exc
+    except _PARSE_ERRORS as exc:
+        raise ProviderError(f"contact payload {_reason(exc)}") from exc
 
 
 class JsonLeadSource:
@@ -198,10 +216,13 @@ class JsonPropertyDataProvider:
     """Property data keyed by ``Address.one_line``, loaded from a JSON file."""
 
     def __init__(self, path: Path):
-        self._by_address = {
-            data.address.one_line: data
-            for data in (parse_property_data(payload) for payload in load_json(Path(path)))
-        }
+        self._by_address: dict[str, PropertyData] = {}
+        for payload in load_json(Path(path)):
+            data = parse_property_data(payload)
+            key = data.address.one_line
+            if key in self._by_address:
+                raise ProviderError(f"duplicate property record for {key} in {path}")
+            self._by_address[key] = data
 
     def lookup(self, address: Address) -> Optional[PropertyData]:
         return self._by_address.get(address.one_line)
@@ -216,8 +237,8 @@ class JsonSkipTraceProvider:
             try:
                 owner = payload["owner_name"]
                 contacts = payload["contacts"]
-            except KeyError as exc:
-                raise ProviderError(f"skip trace payload missing field: {exc.args[0]}") from exc
+            except _PARSE_ERRORS as exc:
+                raise ProviderError(f"skip trace payload {_reason(exc)}") from exc
             self._by_owner.setdefault(self._key(owner), []).extend(
                 parse_contact(contact) for contact in contacts
             )

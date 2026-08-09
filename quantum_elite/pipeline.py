@@ -2,8 +2,9 @@
 
 Each lead flows: ingest -> enrich -> skip trace -> score -> underwrite -> offer
 -> buyer match -> documents. A lead that fails a gate is rejected with a reason
-and the run continues; a provider raising is recorded as a failure event rather
-than aborting the whole run.
+and the run continues; a stage raising is recorded as a failure event rather
+than aborting the whole run, which makes the run health ``degraded`` and the
+caller's exit status non-zero.
 """
 
 from __future__ import annotations
@@ -28,6 +29,10 @@ from .telemetry import EventStatus, RunTelemetry
 
 # Leads below this motivation score are not worth underwriting.
 MIN_MOTIVATION_SCORE = Decimal("0.25")
+
+
+class PipelineError(RuntimeError):
+    """Raised when a stage runs with state an earlier stage should have set."""
 
 
 @dataclass(frozen=True)
@@ -89,11 +94,14 @@ class Pipeline:
         )
         result = PipelineResult(telemetry=telemetry)
 
-        for lead in self.lead_source.fetch():
-            telemetry.record(lead.lead_id, LeadStage.INGESTED, detail=self.lead_source.name)
-            result.packets.append(self._process(lead, telemetry))
-
-        telemetry.finish()
+        # A lead source that raises part-way through still leaves the events it
+        # already produced timed and reportable.
+        try:
+            for lead in self.lead_source.fetch():
+                telemetry.record(lead.lead_id, LeadStage.INGESTED, detail=self.lead_source.name)
+                result.packets.append(self._process(lead, telemetry))
+        finally:
+            telemetry.finish()
         return result
 
     def _process(self, lead: Lead, telemetry: RunTelemetry) -> DealPacket:
@@ -110,8 +118,20 @@ class Pipeline:
                 return packet
             packet = self._dispose(lead, packet, telemetry)
             return self._paper(packet, telemetry)
+        except PipelineError as exc:
+            # A broken stage contract is a defect, not bad input: record it and abort.
+            telemetry.record(lead.lead_id, lead.stage, EventStatus.FAILED, str(exc))
+            raise
         except ProviderError as exc:
             telemetry.record(lead.lead_id, lead.stage, EventStatus.FAILED, str(exc))
+            return packet
+        except Exception as exc:
+            telemetry.record(
+                lead.lead_id,
+                lead.stage,
+                EventStatus.FAILED,
+                f"unhandled {type(exc).__name__}: {exc}",
+            )
             return packet
 
     def _enrich(self, lead: Lead, telemetry: RunTelemetry) -> bool:
@@ -159,7 +179,8 @@ class Pipeline:
         return True
 
     def _underwrite(self, lead: Lead, telemetry: RunTelemetry) -> bool:
-        assert lead.property_data is not None
+        if lead.property_data is None:
+            raise PipelineError(f"lead {lead.lead_id} reached underwriting without property data")
         try:
             result = underwriting.underwrite(
                 lead.property_data,
@@ -193,7 +214,8 @@ class Pipeline:
         return True
 
     def _make_offer(self, lead: Lead, packet: DealPacket, telemetry: RunTelemetry) -> DealPacket:
-        assert lead.underwriting is not None and lead.motivation_score is not None
+        if lead.underwriting is None or lead.motivation_score is None:
+            raise PipelineError(f"lead {lead.lead_id} reached the offer stage unqualified")
         try:
             offer = offers.generate_offer(
                 lead, lead.underwriting, lead.motivation_score, as_of=self.config.effective_date
@@ -210,7 +232,8 @@ class Pipeline:
         return DealPacket(lead=lead, offer=offer)
 
     def _dispose(self, lead: Lead, packet: DealPacket, telemetry: RunTelemetry) -> DealPacket:
-        assert packet.offer is not None and lead.underwriting is not None
+        if packet.offer is None or lead.underwriting is None:
+            raise PipelineError(f"lead {lead.lead_id} reached disposition without an offer")
         try:
             assignment = matching.assign_best_buyer(
                 self.buyers.all_buyers(),

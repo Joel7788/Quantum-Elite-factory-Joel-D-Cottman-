@@ -119,7 +119,16 @@ def main(argv: Sequence[str] | None = None) -> int:
         print(line)
 
     if not args.no_artifacts:
-        for path in write_artifacts(result, args.out_dir):
+        try:
+            written = write_artifacts(result, args.out_dir)
+        except OSError as exc:
+            print(f"ARTIFACTS INCOMPLETE | could not write under {args.out_dir}: {exc}")
+            return 3
+        for path in written:
             print(f"  wrote {path.relative_to(REPO_ROOT) if REPO_ROOT in path.parents else path}")
 
-    return 1 if result.telemetry.failures() else 0
+    if failures := result.telemetry.failures():
+        for event in failures:
+            print(f"  ! {event.lead_id} FAILED at {event.stage.value}: {event.detail}")
+        return 1
+    return 0
