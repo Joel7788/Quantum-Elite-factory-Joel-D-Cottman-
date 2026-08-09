@@ -1,0 +1,70 @@
+# QUANTUM ELITE WHOLESALING - ACQUISITION TO DISPOSITION ORCHESTRATION
+# OPERATOR: JOEL D COTTMAN
+#
+# Rendered by Terraform (templatefile) with pipeline_url and artifact_bucket,
+# and driven by Cloud Scheduler. Endpoints are served by quantum_elite.service
+# on Cloud Run; every call is authenticated with the runner service account's
+# OIDC token. A degraded run halts before publishing artifacts.
+
+main:
+  params: [args]
+  steps:
+    - init:
+        assign:
+          - pipeline_url: ${pipeline_url}
+          - artifact_bucket: ${artifact_bucket}
+
+    - acquire_and_dispose:
+        try:
+          call: http.post
+          args:
+            url: $${pipeline_url + "/run"}
+            auth:
+              type: OIDC
+            timeout: 900
+            body:
+              artifact_bucket: $${artifact_bucket}
+          result: run_result
+        retry:
+          predicate: $${http.default_retry_predicate}
+          max_retries: 3
+          backoff:
+            initial_delay: 10
+            max_delay: 120
+            multiplier: 2
+
+    - log_run:
+        call: sys.log
+        args:
+          severity: INFO
+          text: $${"quantum elite run " + run_result.body.run_id + " health=" + run_result.body.health}
+
+    - gate_on_health:
+        switch:
+          - condition: $${run_result.body.halt}
+            next: halted
+
+    - publish_artifacts:
+        call: http.post
+        args:
+          url: $${pipeline_url + "/publish"}
+          auth:
+            type: OIDC
+          timeout: 300
+          body:
+            run_id: $${run_result.body.run_id}
+            artifact_bucket: $${artifact_bucket}
+        result: publish_result
+
+    - done:
+        return:
+          status: "complete"
+          run_id: $${run_result.body.run_id}
+          acquisition: $${run_result.body}
+          artifacts: $${publish_result.body.artifacts}
+
+    - halted:
+        return:
+          status: "halted"
+          run_id: $${run_result.body.run_id}
+          acquisition: $${run_result.body}

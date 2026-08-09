@@ -1,0 +1,54 @@
+[
+  {
+    "lead_id": "QE-1001",
+    "source": "public_records",
+    "owner_name": "Marcus Webb",
+    "address": {
+      "street": "1420 Fillmore St",
+      "city": "Baltimore",
+      "state": "MD",
+      "postal_code": "21230"
+    },
+    "distress_signals": ["pre_foreclosure", "tax_delinquent", "vacant"],
+    "asking_price": 150000,
+    "days_on_market": 96
+  },
+  {
+    "lead_id": "QE-1002",
+    "source": "zillow_fsbo",
+    "owner_name": "Dana Ruiz",
+    "address": {
+      "street": "77 Chesapeake Row",
+      "city": "Baltimore",
+      "state": "MD",
+      "postal_code": "21224"
+    },
+    "distress_signals": ["absentee_owner"],
+    "asking_price": 410000
+  },
+  {
+    "lead_id": "QE-1003",
+    "source": "direct_mail",
+    "owner_name": "Priya Nandan",
+    "address": {
+      "street": "9 Unmapped Hollow",
+      "city": "Frederick",
+      "state": "MD",
+      "postal_code": "21701"
+    },
+    "distress_signals": ["probate", "code_violation"]
+  },
+  {
+    "lead_id": "QE-1004",
+    "source": "public_records",
+    "owner_name": "Estate of H. Ellery",
+    "address": {
+      "street": "88 Orchard Ave",
+      "city": "Wilmington",
+      "state": "DE",
+      "postal_code": "19805"
+    },
+    "distress_signals": ["probate", "vacant"],
+    "days_on_market": 210
+  }
+]

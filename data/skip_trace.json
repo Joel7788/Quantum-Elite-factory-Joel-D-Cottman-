@@ -1,0 +1,38 @@
+[
+  {
+    "owner_name": "Marcus Webb",
+    "contacts": [
+      {
+        "name": "Marcus Webb",
+        "phone": "410-555-0142",
+        "email": "m.webb@example.com",
+        "confidence": 0.91
+      },
+      {
+        "name": "M. Webb (relative)",
+        "phone": "410-555-0199",
+        "confidence": 0.44
+      }
+    ]
+  },
+  {
+    "owner_name": "Dana Ruiz",
+    "contacts": [
+      {
+        "name": "Dana Ruiz",
+        "email": "dana.ruiz@example.com",
+        "confidence": 0.72
+      }
+    ]
+  },
+  {
+    "owner_name": "Estate of H. Ellery",
+    "contacts": [
+      {
+        "name": "Corinne Ellery (executor)",
+        "phone": "302-555-0117",
+        "confidence": 0.68
+      }
+    ]
+  }
+]

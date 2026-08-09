@@ -1,0 +1,35 @@
+REAL ESTATE PURCHASE AND SALE AGREEMENT
+QUANTUM ELITE WHOLESALING | OPERATOR: ${operator_name}
+
+DRAFT FOR OPERATOR AND ATTORNEY REVIEW -- NOT EXECUTED, NOT LEGAL ADVICE.
+
+Agreement Date: ${agreement_date}
+Property: ${property_address}
+
+PARTIES
+  Seller: ${seller_name}
+    Phone: ${seller_phone}
+    Email: ${seller_email}
+  Buyer:  ${buyer_legal_name} (${buyer_role}), and/or assigns
+
+TERMS
+  1. Purchase Price: ${purchase_price}
+  2. Earnest Money Deposit: ${earnest_money}, held by the closing agent.
+  3. Inspection Period: ${inspection_days} days from the Agreement Date.
+  4. Closing Date: on or before ${closing_date}.
+  5. Offer Expiration: this offer is void if not accepted by ${offer_expires_on}.
+  6. Assignment: Buyer may assign this Agreement, in whole or in part, without
+     Seller's further consent.
+  7. Title: Seller shall convey marketable title by general warranty deed, free
+     of liens except those Buyer agrees in writing to assume.
+  8. Closing Costs: allocated per local custom unless otherwise agreed here.
+  9. Default: Seller's sole remedy for Buyer's default is retention of the
+     Earnest Money Deposit as liquidated damages.
+ 10. Entire Agreement: this document supersedes all prior discussions.
+
+SIGNATURES (to be executed manually after attorney review)
+  Seller: ______________________________  Date: ____________
+          ${seller_name}
+
+  Buyer:  ______________________________  Date: ____________
+          ${buyer_legal_name}

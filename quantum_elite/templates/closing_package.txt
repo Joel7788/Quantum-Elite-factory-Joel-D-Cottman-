@@ -1,0 +1,35 @@
+CLOSING PACKAGE SUMMARY / TITLE COMPANY INSTRUCTIONS
+QUANTUM ELITE WHOLESALING | OPERATOR: ${operator_name}
+
+DRAFT FOR OPERATOR AND ATTORNEY REVIEW -- NOT EXECUTED, NOT LEGAL ADVICE.
+
+Prepared: ${agreement_date}
+Property: ${property_address}
+Scheduled Closing: ${closing_date}
+
+PARTIES
+  Seller:   ${seller_name}
+    Phone: ${seller_phone}
+    Email: ${seller_email}
+  Assignor: ${buyer_legal_name} (${buyer_role})
+  Assignee: ${assignee_name}
+
+FINANCIAL SUMMARY
+  Contract Purchase Price ......... ${purchase_price}
+  Assignment Fee to Assignor ...... ${assignment_fee}
+  Underwritten ARV ................ ${arv}
+  Estimated Repairs ............... ${repair_estimate}
+
+ENCLOSURES CHECKLIST
+  [ ] Executed Purchase and Sale Agreement
+  [ ] Executed Assignment Agreement
+  [ ] Inspection and Due Diligence Addendum
+  [ ] Assignee proof of funds
+  [ ] Seller identification and payoff authorization
+  [ ] Title commitment and lien search
+  [ ] Settlement statement for Assignor's fee disbursement
+
+INSTRUCTIONS TO CLOSING AGENT
+  Disburse the Assignment Fee of ${assignment_fee} to ${buyer_legal_name} at
+  funding. Record the deed conveying the Property from ${seller_name} to
+  ${assignee_name}. Notify the operator of record on any title exception.
