@@ -7,3 +7,7 @@ artifacts/
 .terraform.lock.hcl
 *.tfstate
 *.tfstate.*
+
+# Local deployment variables may name real projects and buckets.
+terraform.tfvars
+*.auto.tfvars
