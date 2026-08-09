@@ -1,0 +1,42 @@
+/* QUANTUM ELITE WHOLESALING - DEPLOYMENT VARIABLES
+   OPERATOR: JOEL D COTTMAN
+
+   Copy to terraform.tfvars and fill in. terraform.tfvars is gitignored; it must
+   never contain secret values - only the Secret Manager secret NAMES below.
+*/
+
+# Created by scripts/bootstrap_gcp.sh.
+project_id = "quantum-elite-prod"
+
+# Apply to dev first: environment = "prod" turns on Cloud Run deletion protection.
+environment = "dev"
+
+region             = "us-east4"
+firestore_location = "nam5"
+
+# Printed by scripts/publish_image.sh. Leaving the default deploys Google's
+# hello-world sample, which does not serve /run or /publish.
+pipeline_image = "us-east4-docker.pkg.dev/quantum-elite-prod/quantum-elite/pipeline:REPLACE_ME"
+
+# Daily autonomous acquisition sweep.
+pipeline_schedule = "0 6 * * *"
+schedule_timezone = "America/New_York"
+
+# Underwriting gates.
+min_motivation_score = 0.25
+assignment_fee       = 10000
+
+# Secret Manager containers Terraform creates. Populate the values afterwards:
+#   printf 'KEY' | gcloud secrets versions add zillow-api-key --data-file=-
+external_api_secrets = [
+  "zillow-api-key",
+  "public-records-api-key",
+  "skip-trace-api-key",
+]
+
+artifact_retention_days = 90
+
+labels = {
+  operator = "joel-d-cottman"
+  system   = "quantum-elite"
+}
