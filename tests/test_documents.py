@@ -133,3 +133,11 @@ def test_write_documents_lays_out_files_per_lead(tmp_path):
     ]
     assert all(path.parent.name == "QE-TEST" for path in written)
     assert written[0].read_text() == generated[docs.ASSIGNMENT_AGREEMENT]
+
+
+@pytest.mark.parametrize("lead_id", ["../escape", "a/b", "", "..", "lead\x00id"])
+def test_write_documents_rejects_unsafe_lead_ids(tmp_path, lead_id):
+    generated = docs.generate_documents(build_packet(), as_of=AS_OF)
+    with pytest.raises(docs.DocumentError, match="unsafe lead_id"):
+        docs.write_documents(generated, tmp_path, lead_id)
+    assert list(tmp_path.iterdir()) == []

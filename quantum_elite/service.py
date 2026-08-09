@@ -30,6 +30,10 @@ from .providers import ProviderError
 DEFAULT_DATA_DIR = Path(os.environ.get("QE_DATA_DIR", Path(__file__).resolve().parent.parent / "data"))
 DEFAULT_OUT_DIR = Path(os.environ.get("QE_OUT_DIR", "/tmp/quantum-elite"))
 
+# Request bodies are small JSON control messages; anything larger is refused
+# before it is read so a single caller cannot exhaust instance memory.
+MAX_BODY_BYTES = 64 * 1024
+
 
 class ServiceError(Exception):
     """Raised for a request the caller must fix (mapped to 4xx)."""
@@ -54,10 +58,19 @@ def _decimal_env(name: str, fallback: Decimal) -> Decimal:
 def config_from_environment(payload: Mapping[str, Any]) -> PipelineConfig:
     defaults = PipelineConfig()
     as_of = payload.get("as_of")
+    if as_of is None:
+        effective = defaults.as_of
+    else:
+        if not isinstance(as_of, str):
+            raise ServiceError("as_of must be a YYYY-MM-DD string")
+        try:
+            effective = date.fromisoformat(as_of)
+        except ValueError as exc:
+            raise ServiceError(f"as_of is not a valid ISO date: {as_of!r}") from exc
     return PipelineConfig(
         min_motivation_score=_decimal_env("QE_MIN_MOTIVATION_SCORE", defaults.min_motivation_score),
         assignment_fee=_decimal_env("QE_ASSIGNMENT_FEE", defaults.assignment_fee),
-        as_of=date.fromisoformat(as_of) if as_of else defaults.as_of,
+        as_of=effective,
     )
 
 
@@ -144,7 +157,18 @@ def _make_handler(runtime: Runtime) -> type[BaseHTTPRequestHandler]:
         server_version = "QuantumElite/1.0"
 
         def _dispatch(self, method: str) -> None:
-            length = int(self.headers.get("Content-Length") or 0)
+            try:
+                length = int(self.headers.get("Content-Length") or 0)
+            except ValueError:
+                length = -1
+            if length < 0:
+                self._respond(Response(400, {"status": "failed", "error": "invalid Content-Length"}))
+                return
+            if length > MAX_BODY_BYTES:
+                self._respond(
+                    Response(413, {"status": "failed", "error": "request body too large"})
+                )
+                return
             raw = self.rfile.read(length) if length else b""
             try:
                 payload = json.loads(raw) if raw else {}
@@ -155,6 +179,12 @@ def _make_handler(runtime: Runtime) -> type[BaseHTTPRequestHandler]:
                 response = Response(400, {"status": "failed", "error": f"invalid JSON: {exc}"})
             except ServiceError as exc:
                 response = Response(400, {"status": "failed", "error": str(exc)})
+            except Exception:  # noqa: BLE001 - never leak internals to the caller
+                self.log_message("unhandled error on %s %s", method, self.path)
+                response = Response(500, {"status": "failed", "error": "internal error"})
+            self._respond(response)
+
+        def _respond(self, response: Response) -> None:
             body = json.dumps(response.body).encode()
             self.send_response(response.status)
             self.send_header("Content-Type", "application/json")

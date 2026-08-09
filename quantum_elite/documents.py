@@ -28,6 +28,7 @@ OPERATOR_NAME = "JOEL D COTTMAN"
 ENTITY_ROLE = "Buyer/Assignor"
 
 PLACEHOLDER_RE = re.compile(r"\$\{(\w+)\}")
+SAFE_SEGMENT_RE = re.compile(r"[A-Za-z0-9._-]{1,128}")
 
 PURCHASE_AGREEMENT = "purchase_agreement"
 ASSIGNMENT_AGREEMENT = "assignment_agreement"
@@ -173,7 +174,13 @@ def generate_documents(packet: DealPacket, as_of: date | None = None) -> dict[st
 
 
 def write_documents(documents: dict[str, str], out_dir: Path, lead_id: str) -> tuple[Path, ...]:
-    """Persist rendered documents as ``<out_dir>/<lead_id>/<name>.txt``."""
+    """Persist rendered documents as ``<out_dir>/<lead_id>/<name>.txt``.
+
+    ``lead_id`` comes from provider data, so it is constrained to a single safe
+    path segment rather than trusted as a directory name.
+    """
+    if lead_id in {".", ".."} or not SAFE_SEGMENT_RE.fullmatch(lead_id):
+        raise DocumentError(f"unsafe lead_id for an output directory: {lead_id!r}")
     target = Path(out_dir) / lead_id
     target.mkdir(parents=True, exist_ok=True)
     written = []

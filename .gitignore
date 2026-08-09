@@ -7,3 +7,8 @@ artifacts/
 .terraform.lock.hcl
 *.tfstate
 *.tfstate.*
+.venv/
+.env
+.env.*
+*.pem
+*.key
