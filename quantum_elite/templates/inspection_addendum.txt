@@ -1,0 +1,31 @@
+ADDENDUM: INSPECTION AND DUE DILIGENCE
+QUANTUM ELITE WHOLESALING | OPERATOR: ${operator_name}
+
+DRAFT FOR OPERATOR AND ATTORNEY REVIEW -- NOT EXECUTED, NOT LEGAL ADVICE.
+
+Addendum Date: ${agreement_date}
+Property: ${property_address}
+
+PARTIES
+  Seller: ${seller_name}
+    Phone: ${seller_phone}
+    Email: ${seller_email}
+  Buyer:  ${buyer_legal_name} (${buyer_role})
+
+TERMS
+  1. This Addendum is incorporated into and modifies the Purchase and Sale
+     Agreement for the Property dated ${agreement_date}.
+  2. Inspection Period: ${inspection_days} days, expiring ${inspection_deadline}.
+  3. Buyer may, at Buyer's expense, conduct inspections, appraisals, and
+     contractor walkthroughs during the Inspection Period.
+  4. Seller shall provide reasonable access with 24 hours' notice.
+  5. Buyer may terminate the Agreement for any reason on or before
+     ${inspection_deadline} and receive a full refund of the Earnest Money.
+  6. All other terms of the Agreement remain in full force.
+
+SIGNATURES (to be executed manually after attorney review)
+  Seller: ______________________________  Date: ____________
+          ${seller_name}
+
+  Buyer:  ______________________________  Date: ____________
+          ${buyer_legal_name}

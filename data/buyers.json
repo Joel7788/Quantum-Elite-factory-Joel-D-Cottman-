@@ -1,0 +1,35 @@
+[
+  {
+    "buyer_id": "CB-01",
+    "name": "Harborline Capital",
+    "markets": ["baltimore|MD", "annapolis|MD"],
+    "min_price": 75000,
+    "max_price": 250000,
+    "max_repair_tolerance": 90000,
+    "proof_of_funds": true,
+    "close_days": 12,
+    "deals_closed": 31
+  },
+  {
+    "buyer_id": "CB-02",
+    "name": "Patapsco Holdings",
+    "markets": ["baltimore|MD"],
+    "min_price": 90000,
+    "max_price": 400000,
+    "max_repair_tolerance": 120000,
+    "proof_of_funds": true,
+    "close_days": 38,
+    "deals_closed": 6
+  },
+  {
+    "buyer_id": "CB-03",
+    "name": "Neon Ridge Partners",
+    "markets": ["baltimore|MD", "wilmington|DE"],
+    "min_price": 60000,
+    "max_price": 300000,
+    "max_repair_tolerance": 150000,
+    "proof_of_funds": false,
+    "close_days": 10,
+    "deals_closed": 44
+  }
+]
